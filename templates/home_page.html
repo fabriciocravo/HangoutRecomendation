@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+</head>
+<body>
+
+<div>
+    <a href="/sign_up">Sing-up</a>
+    <a href="/log_in">Log-in</a>
+</div>
+
+<ul>
+{% for event in data %}
+    <li><a href="/events?number={{event.id}}" >Event name: {{ event.name }} At: {{ event.date }} Description: {{ event.description }}</a></li>
+{% endfor %}
+</ul>
+
+</body>
+</html>
