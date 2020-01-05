@@ -14,7 +14,9 @@
 
 <ul>
 {% for event in data %}
-    <li><a href="/events?number={{event.id}}" >Event name: {{ event.name }} At: {{ event.date }} Description: {{ event.description }}</a></li>
+    <li><a href="/events?number={{event.event_id}}" >Event name: {{ event.title }} </a>
+        <br> At: {{ event.date }}
+        <br> Description: {{ event.description }} </li>
 {% endfor %}
 </ul>
 

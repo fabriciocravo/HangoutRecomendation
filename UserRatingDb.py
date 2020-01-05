@@ -39,10 +39,11 @@ class UserRatings:
 
         sql_command = """
                     INSERT INTO UserRating(user_id, event_id, rating)
-                    VALUES ('{0}','{1}', '{2}');
-                """.format(user_id, event_id, rating)
+                    VALUES ( ? , ? , ?);
+                """
 
-        self.controller.execute(sql_command)
+        values = (user_id, event_id, rating)
+        self.controller.execute(sql_command, values)
         self.connection.commit()
 
     def remove_rating(self, user_id, event_id):

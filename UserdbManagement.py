@@ -54,10 +54,11 @@ class UserdbManagement:
         self.last_id = self.last_id + 1
         sql_command = """
             INSERT INTO Users(user_id, uname, pword, latitude, longitude)
-            VALUES ('{0}','{1}','{2}','{3}','{4}');
+            VALUES ( ? , ?, ?, ?, ? );
         """.format(self.last_id, uname, psw, latitute, longitude)
 
-        self.controller.execute(sql_command)
+        values = (self.last_id, uname, psw, latitute, longitude)
+        self.controller.execute(sql_command, values)
         self.connection.commit()
 
 

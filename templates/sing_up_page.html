@@ -7,6 +7,11 @@
     <script>
         var username_list = {{ data | tojson }};
         console.log(username_list);
+        var alert_address = {{ alert_address }};
+
+        if( alert_address == 1 ) {
+            alert("Address could not be found");
+        }
 
         function check_username() {
             if( username_list.includes(document.getElementById("new_uname").value) ) {
@@ -54,11 +59,17 @@
                 <input id="rep_psw" type="password" placeholder="Enter Retype Password" name="new_psw" required>
 
                 <br>
-        </div>
 
-        {% for label in labels %}
-            <input type="checkbox" name="labels" value={{ label }}>{{ label }}</input> <br>
-        {% endfor %}
+                <label ><b>Address</b></label>
+                <input id="adrs" type="text" placeholder="Enter Your Address" name="address" required>
+
+                <br>
+
+                <label ><b>City</b></label>
+                <input id="city" type="text" placeholder="Enter Your City" name="city" required>
+
+                <br>
+        </div>
 
         <button type="submit">Create User</button>
     </form>

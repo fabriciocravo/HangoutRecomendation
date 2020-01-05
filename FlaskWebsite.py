@@ -3,17 +3,10 @@ import random as rd
 from HTMLGenerator import HTMLGenerator
 import os
 from UserdbManagement import UserdbManagement
+from EventDBManagement import EventsDBManager
+from geopy.geocoders import Nominatim
 
 class Server:
-
-    Labels = ["Jazz", "Coffee", "Music", "Rock", "Pop", "Nightclubs"]
-
-    Events = [{"id": 0, "name": "Hello", "date": 24, "description": "love of my life"},
-              {"id": 1, "name": "Hope", "date": 30, "description": "love of my life"},
-              {"id": 2, "name": "Hail", "date": 50, "description": "Whatever"}]
-
-    Users = {}
-
 
     """
     This Class function is handling the http requests
@@ -26,13 +19,15 @@ class Server:
     def __init__(self, host, port):
         app = Flask(__name__)
         UserDB = UserdbManagement()
+        Events = EventsDBManager()
+        geolocator = Nominatim(user_agent="Hangout Recommendation")
 
         """
             We start by serving the homepage
         """
         @app.route('/', methods=['GET'])
         def index():
-            return render_template("home_page.html", data=Server.Events)
+            return HTMLGenerator.generate_home_page(events=Events)
 
         """
             This is the log in page, it can either come with nothing
@@ -70,11 +65,16 @@ class Server:
             elif request.method == 'POST':
                 new_username = request.form.get("new_uname")
                 new_password = request.form.get("new_psw")
-                labels = request.form.getlist('labels')
+                address = request.form.get("address")
+                city = request.form.get("city")
 
-                # Create new account if we get here
-                HTMLGenerator.Users[new_username] = {'psw': new_password, 'labels':labels}
-                return HTMLGenerator.generate_user_page(new_username)
+                location = geolocator.geocode(address + "," + city)
+
+                if location is not None:
+                    UserDB.create_new_user(new_username, new_password, location.latitude, location.longitude)
+                    return HTMLGenerator.generate_sing_up_page(UserDB, alert_address=0)
+                else:
+                    return HTMLGenerator.generate_sing_up_page(UserDB, alert_address=1)
 
         """
             This is what we show when a user clicked in an event in the home page!
@@ -85,7 +85,7 @@ class Server:
         @app.route("/events" , methods=['GET'])
         def return_event_page():
             number = request.args.get("number")
-            return HTMLGenerator.generate_event_page(int(number))
+            return HTMLGenerator.generate_event_page(events=Events,event_id=number)
 
         app.run(debug=True, port=port, host=host)
 
