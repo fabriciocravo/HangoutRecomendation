@@ -14,7 +14,7 @@ class EventsDBManager:
             We need to connect to the database
             and get the last id!
         """
-        self.connection = sqlite3.connect("Events.db", check_same_thread=False)
+        self.connection = sqlite3.connect("Database.db", check_same_thread=False)
         self.controller = self.connection.cursor()
         self.events_ids = self.retrieve_event_ids()
 

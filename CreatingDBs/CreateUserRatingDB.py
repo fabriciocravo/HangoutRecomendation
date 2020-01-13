@@ -7,7 +7,7 @@ import sqlite3
 import sqlite3
 
 # connecting to the database
-connection = sqlite3.connect("UserRating.db")
+connection = sqlite3.connect("Database.db")
 
 # cursor
 crsr = connection.cursor()
@@ -30,11 +30,6 @@ crsr.execute(sql_command)
 # If we skip this, nothing will be saved in the database.
 connection.commit()
 
-
-sql_command = """
-    SELECT *
-    FROM Labels
-"""
 
 crsr.execute(sql_command)
 ans = crsr.fetchall()

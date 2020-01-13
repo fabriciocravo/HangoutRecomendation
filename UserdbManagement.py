@@ -14,7 +14,7 @@ class UserdbManagement:
             We need to connect to the database
             and get the last id!
         """
-        self.connection = sqlite3.connect("UserTable.db", check_same_thread=False)
+        self.connection = sqlite3.connect("Database.db", check_same_thread=False)
         self.controller = self.connection.cursor()
 
         self.set_last_id()
@@ -40,10 +40,14 @@ class UserdbManagement:
                 """
         self.controller.execute(sql_command)
         all_ids = self.controller.fetchall()
-        self.last_id = all_ids[-1][0]
+
+        if len(all_ids) == 0:
+            self.last_id = 0
+        else:
+            self.last_id = all_ids[-1][0]
 
 
-    def create_new_user(self, uname, psw, latitute, longitude):
+    def create_new_user(self, uname, psw, address, city, latitute, longitude):
 
         """
             This function adds a new user to the user db table!
@@ -53,11 +57,11 @@ class UserdbManagement:
 
         self.last_id = self.last_id + 1
         sql_command = """
-            INSERT INTO Users(user_id, uname, pword, latitude, longitude)
-            VALUES ( ? , ?, ?, ?, ? );
-        """.format(self.last_id, uname, psw, latitute, longitude)
+            INSERT INTO Users(user_id, uname, pword, address, city, latitude, longitude)
+            VALUES ( ?, ?, ?, ?, ?, ?, ? );
+        """
 
-        values = (self.last_id, uname, psw, latitute, longitude)
+        values = (self.last_id, uname, psw, address, city, latitute, longitude)
         self.controller.execute(sql_command, values)
         self.connection.commit()
 
@@ -78,6 +82,25 @@ class UserdbManagement:
         return self.controller.fetchall()[0]
 
 
+    def return_user_id(self, uname):
+
+        """
+            This function takes in a username and returns a user id!
+            The user names must all be unique
+            We check the creation of usernames to avoid duplicates
+        """
+        sql_command = """
+                            SELECT user_id
+                            FROM Users
+                            WHERE uname='{0}'
+                        """.format(uname)
+        self.controller.execute(sql_command)
+        user_id = self.controller.fetchall()
+
+        if(len(user_id) != 1):
+            raise Exception("Fatal error occurred two ids for one username")
+
+        return user_id[0][0]
 
     def return_usernames(self):
 
@@ -126,14 +149,32 @@ class UserdbManagement:
         for col in self.controller.fetchall():
             print(col)
 
+    def delete_user_table(self):
+        """
+            Created for debuging
+            Deletes the data in the user table!
+        """
 
+        sql_command = """
+                        DELETE FROM Users;
+                    """
+        self.controller.execute(sql_command)
+        self.connection.commit()
 
+    def drop_table(self):
+        """
+            Created for debuging
+            Drops the table!
+        """
+
+        sql_command = """
+                    DROP TABLE Users;
+                """
+        self.connection.execute(sql_command)
 
 
 if __name__ == "__main__":
 
     UserDB = UserdbManagement()
     UserDB.check_database()
-    print(UserDB.return_usernames())
-    print(UserDB.return_user_data("Fafa"))
-    print(UserDB.user_authentication("Fafa","123"))
+

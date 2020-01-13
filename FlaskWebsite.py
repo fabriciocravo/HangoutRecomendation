@@ -4,6 +4,7 @@ from HTMLGenerator import HTMLGenerator
 import os
 from UserdbManagement import UserdbManagement
 from EventDBManagement import EventsDBManager
+from UserRatingDb import UserRatings
 from geopy.geocoders import Nominatim
 
 class Server:
@@ -18,8 +19,17 @@ class Server:
 
     def __init__(self, host, port):
         app = Flask(__name__)
+        app.secret_key = '"\n*\x96sc\x17I\xd2\xf2-\x01\xe8\xac5'
+
+        """
+            Declaration of the database managing classes
+            One class manage user database
+            One manages events
+            The final manages the ratings from users and events
+        """
         UserDB = UserdbManagement()
         Events = EventsDBManager()
+        Ratings = UserRatings()
         geolocator = Nominatim(user_agent="Hangout Recommendation")
 
         """
@@ -45,8 +55,9 @@ class Server:
                 password = request.form.get("psw")
 
                 # Authentication part!!!!!
-                if( UserDB.user_authentication(username,password) ):
-                    return HTMLGenerator.generate_user_page(username)
+                if UserDB.user_authentication(username,password):
+                    session['user_id'] = UserDB.return_user_id(username)
+                    return redirect('/user_ratings_page')
                 else:
                     return HTMLGenerator.generate_aut_fail_page()
 
@@ -68,30 +79,65 @@ class Server:
                 address = request.form.get("address")
                 city = request.form.get("city")
 
-                location = geolocator.geocode(address + "," + city)
+                # We must check if the username is unique! If not return the same template
+                # With a warning!
+                if new_username in UserDB.return_usernames():
+                    return HTMLGenerator.generate_sing_up_page(UserDB, alert_username=1)
 
-                if location is not None:
-                    UserDB.create_new_user(new_username, new_password, location.latitude, location.longitude)
-                    return HTMLGenerator.generate_sing_up_page(UserDB, alert_address=0)
+
+                #location = geolocator.geocode(address + "," + city)
+                location = None
+                if location is None:
+                    latitude = "NULL"
+                    longitude = "NULL"
                 else:
-                    return HTMLGenerator.generate_sing_up_page(UserDB, alert_address=1)
+                    latitude = location.latitude
+                    longitude = location.longitude
+
+                UserDB.create_new_user(new_username, new_password, address, city
+                                       , latitude, longitude)
+                session['user_id'] = UserDB.return_user_id(new_username)
+                return redirect('/user_ratings_page')
+
 
         """
             This is what we show when a user clicked in an event in the home page!
             Every event will be stored with an id, the user sends the id in the http request
             We retrieve the id to show the information about the event!
         """
-
-        @app.route("/events" , methods=['GET'])
+        @app.route("/events", methods=['GET'])
         def return_event_page():
             number = request.args.get("number")
             return HTMLGenerator.generate_event_page(events=Events,event_id=number)
 
-        app.run(debug=True, port=port, host=host)
+        """
+            This part generates the user page
+            The user page consists of two parts
+            A part to rate events based on how likely a user wishes to go on them
+            And a part consisting on the recommended events for this user!
+        """
+        @app.route("/user_ratings_page", methods=['GET','POST'])
+        def return_user_rating_page():
+            if request.method == 'GET':
+                return HTMLGenerator.generate_ratings_page(session['user_id'], UserDB, Events, Ratings)
+            if request.method == 'POST':
 
-    """
-       Authentication method checking username and password!
-    """
+                for review in request.form:
+                    review = review.split()
+
+                    if( len(review) == 2):
+                        number_of_starts = review[0][-1]
+                        event_id = review[1]
+                        Ratings.add_rating(str(session['user_id']), str(event_id), str(number_of_starts))
+
+            return HTMLGenerator.generate_ratings_page(session['user_id'], UserDB, Events, Ratings)
+
+        @app.route("/user_page", methods=['GET'])
+        def return_user_page():
+            if request.method == 'GET':
+                pass
+
+        app.run(debug=True, port=port, host=host)
 
 
 """

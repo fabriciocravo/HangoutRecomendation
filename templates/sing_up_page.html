@@ -9,6 +9,10 @@
         console.log(username_list);
         var alert_address = {{ alert_address }};
 
+        if( alert_username == 1 ) {
+            alert("Username already in use");
+        }
+
         if( alert_address == 1 ) {
             alert("Address could not be found");
         }

@@ -37,7 +37,6 @@ def get_data_from_API_with_head(url):
 
 def data_clean(raw_data):
     events = raw_data['records']
-    cleaned_data = []
 
     for event in events:
 
@@ -52,19 +51,23 @@ def data_clean(raw_data):
             try:
                 cleaned_event[a] = cleanhtml(event['fields'][b])
             except KeyError:
-                print('KeyError in', a)
                 cleaned_event[a] = "NULL"
 
         try:
-            location = geolocator.geocode(cleaned_event['address_street'])
+            location = geolocator.geocode(cleaned_event['address_street'] + "," + cleaned_event['address_city'])
         except:
             location = None
 
-        if location is not None and (cleaned_event['event_id'] not in str(Events.events_ids)) \
-                and (cleaned_event['date'] != "NULL") and (cleaned_event['date_end'] != "NULL"):
+        if location is not None:
             cleaned_event['latitude'] = location.latitude
             cleaned_event['longitude'] = location.longitude
-            cleaned_data.append(cleaned_event)
+        else:
+            cleaned_event['latitude'] = "NULL"
+            cleaned_event['longitude'] = "NULL"
+
+
+        if (cleaned_event['event_id'] not in str(Events.events_ids)) \
+                and (cleaned_event['date'] != "NULL") and (cleaned_event['date_end'] != "NULL"):
 
             Events.add_event(cleaned_event['event_id'], cleaned_event['title'], cleaned_event['category'],
                              cleaned_event['price'], cleaned_event['description'], cleaned_event['link'],

@@ -7,7 +7,7 @@ import sqlite3
 import sqlite3
 
 # connecting to the database
-connection = sqlite3.connect("UserRecommendations.db")
+connection = sqlite3.connect("Database.db")
 
 # cursor
 crsr = connection.cursor()

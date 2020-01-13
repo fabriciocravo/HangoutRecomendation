@@ -1,7 +1,7 @@
 import sqlite3
 
 
-class UserRatings:
+class RecomendationDBManagement:
 
     management_instances_created = 0
 
@@ -23,27 +23,27 @@ class UserRatings:
             To avoid conflicts we only generate a single instance of each db manager
         """
 
-        if UserRatings.management_instances_created != 0:
+        if RecomendationDBManagement.management_instances_created != 0:
             raise ValueError("There can only be one database manager")
         else:
-            UserRatings.management_instances_created = UserRatings.management_instances_created + 1
+            RecomendationDBManagement.management_instances_created = RecomendationDBManagement.management_instances_created + 1
 
-    def add_rating(self, user_id, event_id, rating):
+    def add_recommendation(self, user_id, event_id, score):
 
         """
-            This function adds a event rating made by the user to the database
+            This function is used
         """
 
         sql_command = """
-                    INSERT INTO UserRating(user_id, event_id, rating)
+                    INSERT INTO UserRecommendations(user_id, event_id, rating)
                     VALUES ( ? , ? , ?);
                 """
 
-        values = (user_id, event_id, rating)
+        values = (user_id, event_id, score)
         self.controller.execute(sql_command, values)
         self.connection.commit()
 
-    def remove_rating(self, user_id, event_id):
+    def remove_recommendation(self, user_id, event_id):
 
         """
             This function removes a event rating made by the user to the database
@@ -51,14 +51,14 @@ class UserRatings:
 
         sql_command = """
                        DELETE FROM UserRating 
-                       WHERE UserRating.user_id = '{0}'
-                       AND UserRating.event_id = '{1}'
+                       WHERE UserRecommendations.user_id = '{0}'
+                       AND UserRecommendations.event_id = '{1}'
                     """.format(user_id, event_id)
 
         self.controller.execute(sql_command)
         self.connection.commit()
 
-    def get_ratings_from_user(self, user_id):
+    def get_recommendations_for_user(self, user_id):
 
         """
             This function returns all event ratings from a specific user
@@ -67,36 +67,14 @@ class UserRatings:
         """
 
         sql_command = """
-                        SELECT event_id, rating
-                        FROM UserRating
+                        SELECT event_id, score
+                        FROM UserRecommendations
                         WHERE user_id = '{0}'
+                        ORDER BY score
                     """.format(user_id)
         self.controller.execute(sql_command)
 
-        ratings = self.controller.fetchall()
-        return ratings
-
-    def get_unrated_events(self, user_id):
-
-        """
-            This function returns a list of all unrated events
-            This is done to create the rating events page
-            So the user can rate events he has yet not rated!
-        """
-
-        sql_command = """
-                        SELECT event_id
-                        FROM Events
-                        WHERE event_id NOT IN(
-                        SELECT event_id FROM UserRating
-                        )
-                    """.format(user_id)
-
-        self.controller.execute(sql_command)
-
-        ids = [x[0] for x in self.controller.fetchall()]
-        return ids
-
+        return self.controller.fetchall()
 
     def check_database(self):
 
@@ -107,7 +85,7 @@ class UserRatings:
 
         sql_command = """
                     SELECT *
-                    FROM UserRating
+                    FROM UserRecommendations
                 """
         self.controller.execute(sql_command)
 
@@ -122,12 +100,11 @@ class UserRatings:
         """
 
         sql_command = """
-                        DELETE FROM UserRating;
+                        DELETE FROM UserRecommendations;
                     """
         self.controller.execute(sql_command)
         self.connection.commit()
 
 if __name__ == "__main__":
 
-    UserRatings = UserRatings()
-    UserRatings.check_database()
+    pass
